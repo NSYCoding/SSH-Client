@@ -1,0 +1,5 @@
+node_modules
+dist
+output
+__pycache__
+react_module

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/*"
+      ]
+    }
+  },
+  "exclude": [
+    "**/react-wrapper/**"
+  ],
+  "include": [
+    "src/**/*",
+    "./node_modules/@nexus-app/nexus-client/renderer.d.ts",
+    "electron.ts"
+  ]
+}
