@@ -1,61 +1,71 @@
-import { useEffect, useState } from 'react'
-import './App.css'
-import { addProcessListener, sendToProcess } from './nexus-bridge';
+import { useEffect, useState } from "react";
+import './App.css';
+import { addProcessListener } from './nexus-bridge';
 
+const WS_URL = "ws://localhost:3230";
 
 function App() {
-    const [count, setCount] = useState(0);
-    const [isSampleSettingOn, setSampleSetting] = useState(false);
+    const [messages, setMessages] = useState<string[]>([]);
 
     useEffect(() => {
-        const listener = addProcessListener((eventType: string, data: any[]) => {
-            switch (eventType) {
-                case "sample-setting": {
-                    setSampleSetting(data[0]);
-                    break;
-                }
-                case "accent-color-changed": {
-                    document.documentElement.style.cssText = "--accent-color: " + data[0];
-                    break;
-                }
-                default: {
-                    console.log("Uncaught message: " + eventType + " | " + data)
-                    break;
-                }
-            }
-        });
-        sendToProcess("init");
+        const ws = new WebSocket(WS_URL);
 
-        return () => window.removeEventListener("message", listener);
+        ws.onopen = () => {
+            console.log("WebSocket connected");
+        };
+
+        ws.onmessage = (event) => {
+            setMessages((prev) => [...prev, event.data]);
+        };
+
+        ws.onclose = () => {
+            console.log("WebSocket disconnected");
+        };
+
+        ws.onerror = (err) => {
+            console.error("WebSocket error", err);
+        };
+
+        return () => {
+            ws.close();
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleMessage = (eventType: string, ...data: any) => {
+            console.log("Received from process:", eventType, data);
+        };
+
+        const removeListener = addProcessListener(handleMessage);
+
+        return () => {
+            window.removeEventListener("message", removeListener);
+        };
     }, []);
 
 
     return (
         <>
-            <div style={{ display: "flex", justifyContent: "center" }}>
-                <a href="https://github.com/aarontburn/nexus-core" target="_blank"
-                    style={{ width: "fit-content" }}>
-                    <div className="logo nexus"></div>
-                </a>
+            <div className="container">
+                <div className="row1">
+                    <input type="text" className='inputHost' placeholder='Enter your hostname (user@UserIP || hostname)' id='hostname' />
+                    <label className='hostnameLabel' htmlFor="hostname">Hostname</label>
+                </div>
+                <div className="row2">
+                    <pre id='output'></pre>
+                    <input type="text" id='terminalInput' />
+                </div>
             </div>
-            <h1><b>Nexus</b></h1>
-            <h1>Sample React App</h1>
-            <p>Sample setting is <b>{isSampleSettingOn ? "on" : "off"}</b>. Visit the <b>Settings</b> module to change it.</p>
-            <div className="card">
-                <button onClick={() => setCount((count) => count + 1)}>
-                    count is {count}
-                </button>
-                <br />
-                <br />
-                <button onClick={() => sendToProcess("count", count)}>
-                    Send <b>count</b> to process
-                </button>
-                <p>
-                    Edit <code>src/App.tsx</code> and save to test HMR
-                </p>
+            <div>
+                <h1>SSH Output</h1>
+                <pre>
+                    {messages.map((msg, idx) => (
+                        <div key={idx}>{msg}</div>
+                    ))}
+                </pre>
             </div>
         </>
     )
 }
 
-export default App
+export default App;

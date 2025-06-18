@@ -1,11 +1,14 @@
 {
+  "name": "ssh-client",
+  "version": "1.0.0",
   "config": {
     "react-wrapper-directory": "./src/renderer/react-wrapper"
   },
   "scripts": {
     "postinstall": "npm install @nexus-app/nexus-client@latest",
     "preinstall": "cd %npm_package_config_react-wrapper-directory% && npm install",
-    "start": "npm-run-all --parallel vite:start electron-start",
+    "server": "npx ts-node server.ts",
+    "start": "npm-run-all --parallel vite:start electron-start server",
     "export": "npm run vite:build && node node_modules/@nexus-app/nexus-exporter/exporter.js",
     "export:dev": "npm run vite:build && node node_modules/@nexus-app/nexus-exporter/exporter.js --dev",
     "export:output-dir": "node node_modules/@nexus-app/nexus-exporter/exporter.js --default-location",
@@ -14,13 +17,22 @@
     "electron-start": "npm run export:dev && cd ./node_modules/@nexus-app/nexus-client/ && npm start"
   },
   "devDependencies": {
-    "@nexus-app/nexus-client": "^0.0.12",
+    "@nexus-app/nexus-client": "^0.1.0",
+    "@types/express": "^5.0.3",
+    "@types/ssh2": "^1.15.5",
+    "@types/ws": "^8.18.1",
     "@types/yauzl-promise": "^4.0.1",
     "electron": "^35.1.5",
     "install": "^0.13.0",
     "npm": "^11.2.0",
     "npm-run-all": "^4.1.5",
-    "typescript": "^4.8.3",
-    "yauzl-promise": "^4.0.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^4.8.3"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-ssh": "^13.2.1",
+    "ssh2": "^1.16.0",
+    "ws": "^8.18.2"
   }
 }

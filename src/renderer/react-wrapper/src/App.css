@@ -1,8 +1,8 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
 }
 
 .logo {
@@ -43,4 +43,48 @@
   mask-image: url("./assets/logo.svg");
   mask-position: center;
   background-color: var(--accent-color);
+}
+
+.row1 {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  width: 100vw;
+}
+
+.inputHost {
+  width: 70vw;
+  padding: 20px;
+}
+
+.hostnameLabel {
+  border: solid 1px #ccc;
+  display: flex;
+  justify-content: center;
+  padding: 15px;
+  flex-direction: row;
+  width: 30vw;
+  text-align: center;
+}
+
+.row2 {
+  width: 100vw;
+  min-height: 80vh;
+  position: relative;
+  left: 0;
+  bottom: 0;
+}
+
+#terminalInput {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  z-index: 10;
+}
+.row2 {
+  padding-bottom: 50px;
 }
