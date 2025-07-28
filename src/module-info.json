@@ -1,6 +1,6 @@
 {
     "name": "SSH-Client",
-    "id": "developer.ssh-client",
+    "id": "developer.ssh_client",
     "version": "1.0.0",
     "author": "noursy",
     "description": "A simple SSH client built with Nexus",

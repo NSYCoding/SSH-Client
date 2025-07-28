@@ -55,6 +55,8 @@ export default class SSHClientProcess extends Process {
             case "init": {
                 // This is called when the renderer is ready to receive events.
                 this.initialize();
+
+                // SSH-Client Process is ready to receive events.
                 const serverPath = path.join(__dirname, "server.ts");
                 const serverProcess = spawn("npx", ["ts-node", serverPath], {
                     stdio: "inherit",
