@@ -1,5 +1,10 @@
 import * as path from "path";
-import { DataResponse, Process, Setting } from "@nexus-app/nexus-module-builder";
+import { spawn } from "child_process";
+import {
+    DataResponse,
+    Process,
+    Setting,
+} from "@nexus-app/nexus-module-builder";
 import { BooleanSetting } from "@nexus-app/nexus-module-builder/settings/types";
 
 // These is replaced to the ID specified in export-config.js during export. DO NOT MODIFY.
@@ -8,19 +13,16 @@ const MODULE_NAME: string = "{EXPORTED_MODULE_NAME}";
 // ---------------------------------------------------
 const HTML_PATH: string = path.join(__dirname, "../renderer/index.html");
 
-
 // If you have an icon, specify the relative path from this file.
 // Can be a .png, .jpeg, .jpg, or .svg
 // const ICON_PATH: string = path.join(__dirname, "...")
 
 const ICON_PATH: string = undefined;
 
-
-export default class SampleProcess extends Process {
-
+export default class SSHClientProcess extends Process {
     /**
      *  The constructor. At this point, the renderer may not be fully initialized yet;
-     *  therefor do not do any logic important to the renderer and 
+     *  therefor do not do any logic important to the renderer and
      *  instead put that logic in initialize().
      */
     public constructor() {
@@ -29,8 +31,8 @@ export default class SampleProcess extends Process {
             moduleName: MODULE_NAME,
             paths: {
                 htmlPath: HTML_PATH,
-                iconPath: ICON_PATH
-            }
+                iconPath: ICON_PATH,
+            },
         });
     }
 
@@ -40,25 +42,37 @@ export default class SampleProcess extends Process {
 
         this.refreshAllSettings();
         // Request the accent color from the built-in 'Settings' module and send it to the renderer.
-        this.requestExternal("nexus.Settings", "get-accent-color").then((value: DataResponse) => {
-            this.sendToRenderer("accent-color-changed", value.body)
-        });
+        this.requestExternal("nexus.Settings", "get-accent-color").then(
+            (value: DataResponse) => {
+                this.sendToRenderer("accent-color-changed", value.body);
+            }
+        );
     }
 
     // Receive events sent from the renderer.
     public async handleEvent(eventType: string, data: any[]): Promise<any> {
         switch (eventType) {
-            case "init": { // This is called when the renderer is ready to receive events.
+            case "init": {
+                // This is called when the renderer is ready to receive events.
                 this.initialize();
-                break;
-            }
-            case "count": {
-                console.info(`[${MODULE_NAME}] Received 'count': ${data[0]}`);
+                const serverPath = path.join(__dirname, "server.ts");
+                const serverProcess = spawn("npx", ["ts-node", serverPath], {
+                    stdio: "inherit",
+                    shell: true,
+                });
+                serverProcess.on("error", (error) => {
+                    console.error("Failed to start server:", error);
+                });
+                serverProcess.on("exit", (code) => {
+                    console.log(`Server exited with code ${code}`);
+                });
                 break;
             }
 
             default: {
-                console.info(`[${MODULE_NAME}] Unhandled event: eventType: ${eventType} | data: ${data}`);
+                console.info(
+                    `[${MODULE_NAME}] Unhandled event: eventType: ${eventType} | data: ${data}`
+                );
                 break;
             }
         }
@@ -67,23 +81,21 @@ export default class SampleProcess extends Process {
     // Add settings/section headers.
     public registerSettings(): (Setting<unknown> | string)[] {
         return [
-            "Sample Setting Group",
+            "SSH Client Settings",
             new BooleanSetting(this)
                 .setDefault(false)
-                .setName("Sample Toggle Setting")
-                .setDescription("An example of a true/false setting.")
-                .setAccessID('sample_bool'),
-
+                .setName("Enable SSH Agent Forwarding")
+                .setDescription("Allow SSH agent forwarding.")
+                .setAccessID("ssh_agent_forwarding"),
         ];
     }
 
     // Fired whenever a setting is modified.
-    public async onSettingModified(modifiedSetting: Setting<unknown>): Promise<void> {
-        if (modifiedSetting.getAccessID() === "sample_bool") {
-            this.sendToRenderer('sample-setting', modifiedSetting.getValue());
+    public async onSettingModified(
+        modifiedSetting: Setting<unknown>
+    ): Promise<void> {
+        if (modifiedSetting.getAccessID() === "ssh_agent_forwarding") {
+            this.sendToRenderer("ssh-agent-forwarding", modifiedSetting.getValue());
         }
     }
-
-
-
 }

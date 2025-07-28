@@ -1,10 +1,10 @@
 {
-    "name": "Sample React Module",
-    "id": "developer.Sample_React_Module",
+    "name": "SSH-Client",
+    "id": "developer.ssh-client",
     "version": "1.0.0",
-    "author": "developer",
-    "description": "A template to create a module for Nexus using React.",
-    "link": "https://github.com/aarontburn/nexus-template-react",
+    "author": "noursy",
+    "description": "A simple SSH client built with Nexus",
+    "link": "https://github.com/NSYCoding/SSH-Client",
     "platforms": ["win32", "linux", "darwin"],
     "build": {
         "build-version": 1,

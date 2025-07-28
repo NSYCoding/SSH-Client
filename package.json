@@ -7,8 +7,7 @@
   "scripts": {
     "postinstall": "npm install @nexus-app/nexus-client@latest",
     "preinstall": "cd %npm_package_config_react-wrapper-directory% && npm install",
-    "server": "npx ts-node server.ts",
-    "start": "npm-run-all --parallel vite:start electron-start server",
+    "start": "npm-run-all --parallel vite:start electron-start",
     "export": "npm run vite:build && node node_modules/@nexus-app/nexus-exporter/exporter.js",
     "export:dev": "npm run vite:build && node node_modules/@nexus-app/nexus-exporter/exporter.js --dev",
     "export:output-dir": "node node_modules/@nexus-app/nexus-exporter/exporter.js --default-location",
