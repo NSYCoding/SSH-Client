@@ -45,6 +45,7 @@ export default class SSHClientProcess extends Process {
         this.requestExternal("nexus.Settings", "get-accent-color").then(
             (value: DataResponse) => {
                 this.sendToRenderer("accent-color-changed", value.body);
+                this.sendToRenderer("ssh_agent_forwarding", value.body);
             }
         );
     }

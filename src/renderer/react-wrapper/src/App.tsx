@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import './App.css';
+import { addProcessListener, sendToProcess } from "./nexus-bridge";
 
 const WS_URL = "ws://localhost:3230";
 
@@ -12,6 +13,88 @@ function App() {
     const [showPassword, setShowPassword] = useState(false);
     const [ws, setWs] = useState<WebSocket | null>(null);
     const terminalInputRef = useRef<HTMLInputElement>(null);
+
+    const handleConnect = useCallback((agentHostname?: string) => {
+        const targetHostname = agentHostname || hostname.trim();
+        if (targetHostname && ws && ws.readyState === WebSocket.OPEN) {
+            if (agentHostname) {
+                setHostname(agentHostname);
+            }
+            setIsConnecting(true);
+            setMessages([]);
+            
+            const connectionData = {
+                action: 'connect',
+                hostname: targetHostname,
+                password: password.trim()
+            };
+            
+            ws.send(JSON.stringify(connectionData));
+            setPassword('');
+        }
+    }, [hostname, password, ws]);
+
+    useEffect(() => {
+        const listener = addProcessListener((eventType: string, data: any[]) => {
+            switch (eventType) {
+                case "ssh-agent-authentication": {
+                    handleConnect(data[0]);
+                    break;
+                }
+                case "ssh-agent-forwarding": {
+                    const agentHostname = data[0];
+                    if (agentHostname) {
+                        handleConnect(agentHostname);
+                    }
+                    break;
+                }
+                case "ssh-agent-forwarding-disabled": {
+                    setIsConnected(false);
+                    setIsConnecting(false);
+                    break;
+                }
+                case "ssh-agent-forwarding-enabled": {
+                    setIsConnected(true);
+                    setIsConnecting(false);
+                    break;
+                }
+                case "ssh-agent-forwarding-error": {
+                    console.error("SSH Agent Forwarding Error:", data[0]);
+                    setIsConnected(false);
+                    setIsConnecting(false);
+                    break;
+                }
+                case "ssh-agent-forwarding-success": {
+                    console.log("SSH Agent Forwarding Success:", data[0]);
+                    setIsConnected(true);
+                    setIsConnecting(false);
+                    break;
+                }
+                case "ssh-agent-forwarding-status": {
+                    const status = data[0];
+                    if (status === "connected") {
+                        setIsConnected(true);
+                        setIsConnecting(false);
+                    } else if (status === "disconnected") {
+                        setIsConnected(false);
+                        setIsConnecting(false);
+                    }
+                    break;
+                }
+                case "accent-color-changed": {
+                    document.documentElement.style.cssText = "--accent-color: " + data[0];
+                    break;
+                }
+                default: {
+                    console.log("Uncaught message: " + eventType + " | " + data)
+                    break;
+                }
+            }
+        });
+        sendToProcess("init");
+
+        return () => window.removeEventListener("message", listener);
+    }, [handleConnect]);
 
     useEffect(() => {
         // Reset connection states on page load
@@ -48,45 +131,20 @@ function App() {
             };
 
             websocket.onclose = () => {
-                console.log("WebSocket disconnected");
                 setWs(null);
                 setIsConnected(false);
                 setIsConnecting(false);
-                
-                setTimeout(connectWebSocket, 3000);
             };
 
-            websocket.onerror = (error) => {
-                console.error("WebSocket error:", error);
-                setIsConnecting(false);
-                setIsConnected(false);
-            };
+            return websocket;
         };
 
-        connectWebSocket();
+        const wsInstance = connectWebSocket();
 
         return () => {
-            if (ws) {
-                ws.close();
-            }
+            wsInstance.close();
         };
     }, []);
-
-    const handleConnect = () => {
-        if (hostname.trim() && ws && ws.readyState === WebSocket.OPEN) {
-            setIsConnecting(true);
-            setMessages([]);
-            
-            const connectionData = {
-                action: 'connect',
-                hostname: hostname.trim(),
-                password: password.trim()
-            };
-            
-            ws.send(JSON.stringify(connectionData));
-            setPassword('');
-        }
-    };
 
     const handleDisconnect = () => {
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -156,7 +214,7 @@ function App() {
                         </button>
                     </div>
                     <button 
-                        onClick={isConnected ? handleDisconnect : handleConnect}
+                        onClick={isConnected ? handleDisconnect : () => handleConnect()}
                         className={getButtonClass()}
                         disabled={!hostname.trim() || isConnecting || !ws}
                     >
