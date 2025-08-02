@@ -15,9 +15,9 @@ const HTML_PATH: string = path.join(__dirname, "../renderer/index.html");
 
 // If you have an icon, specify the relative path from this file.
 // Can be a .png, .jpeg, .jpg, or .svg
-// const ICON_PATH: string = path.join(__dirname, "...")
+const ICON_PATH: string = path.join(__dirname, "...")
 
-const ICON_PATH: string = undefined;
+// const ICON_PATH: string = undefined;
 
 export default class SSHClientProcess extends Process {
     /**
@@ -36,46 +36,38 @@ export default class SSHClientProcess extends Process {
         });
     }
 
-    // The entry point of the module. Will be called once the renderer sends the 'init' signal.
     public async initialize(): Promise<void> {
-        super.initialize(); // This should be called.
-
         this.refreshAllSettings();
-        // Request the accent color from the built-in 'Settings' module and send it to the renderer.
         this.requestExternal("nexus.Settings", "get-accent-color").then(
             (value: DataResponse) => {
                 this.sendToRenderer("accent-color-changed", value.body);
-                this.sendToRenderer("ssh_agent_forwarding", value.body);
             }
         );
+
+        if (!super.isInitialized()) {
+            const serverPath = path.join(__dirname, "server.js");
+            const serverProcess = spawn("node", [serverPath]);
+
+            serverProcess.stdout.on("data", (data) => {
+                console.log(data.toString().trim());
+            });
+            serverProcess.stderr.on("data", (data) => {
+                console.log(data.toString().trim());
+            });
+            serverProcess.on("error", (error) => {
+                console.error("Failed to start server:", error);
+            });
+            serverProcess.on("exit", (code) => {
+                console.log(`Server exited with code ${code}`);
+            });
+        }
+        await super.initialize();
     }
 
-    // Receive events sent from the renderer.
     public async handleEvent(eventType: string, data: any[]): Promise<any> {
         switch (eventType) {
             case "init": {
-                // This is called when the renderer is ready to receive events.
                 this.initialize();
-
-                // SSH-Client Process is ready to receive events.
-                const serverPath = path.join(__dirname, "server.ts");
-                const serverProcess = spawn("npx", ["ts-node", serverPath], {
-                    stdio: "inherit",
-                    shell: true,
-                });
-                serverProcess.on("error", (error) => {
-                    console.error("Failed to start server:", error);
-                });
-                serverProcess.on("exit", (code) => {
-                    console.log(`Server exited with code ${code}`);
-                });
-                break;
-            }
-
-            default: {
-                console.info(
-                    `[${MODULE_NAME}] Unhandled event: eventType: ${eventType} | data: ${data}`
-                );
                 break;
             }
         }

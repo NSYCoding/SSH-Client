@@ -94,7 +94,7 @@ function App() {
         sendToProcess("init");
 
         return () => window.removeEventListener("message", listener);
-    }, [handleConnect]);
+    }, [handleConnect, setIsConnected, setIsConnecting]);
 
     useEffect(() => {
         // Reset connection states on page load

@@ -1,5 +1,5 @@
 import { WebSocketServer } from "ws";
-import express, { Request, Response } from "express";
+import express from "express";
 import http from "http";
 import { Client } from 'ssh2';
 
@@ -9,15 +9,15 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 app.use(express.json());
-app.get("/", (_: Request, res: Response) => {
+app.get("/", (_, res) => {
     res.send('SSH WebSocket Server is running');
 });
 
 // Store SSH connections per WebSocket client
-const sshConnections = new Map<any, any>();
+const sshConnections = new Map();
 
 // Function to clean ANSI escape sequences
-function cleanAnsiSequences(text: string): string {
+function cleanAnsiSequences(text) {
     // Remove ANSI escape sequences (like [?2004h, [?2004l, colors, etc.)
     return text.replace(/\x1b\[[0-9;?]*[a-zA-Z]/g, '');
 }
@@ -67,7 +67,7 @@ wss.on("connection", (ws) => {
     });
 });
 
-function connectSSH(ws: any, hostname: string, password?: string) {
+function connectSSH(ws, hostname, password) {
     // Clean up any existing connection for this WebSocket
     disconnectSSH(ws);
 
@@ -91,7 +91,7 @@ function connectSSH(ws: any, hostname: string, password?: string) {
         ws.send(`Connected to ${username}@${host}\n`);
         
         // Start a shell session
-        sshClient.shell((err: any, stream: any) => {
+        sshClient.shell((err, stream) => {
             if (err) {
                 ws.send(`Shell error: ${err.message}\n`);
                 return;
@@ -105,14 +105,14 @@ function connectSSH(ws: any, hostname: string, password?: string) {
                 disconnectSSH(ws);
             });
 
-            stream.on('data', (data: Buffer) => {
+            stream.on('data', (data) => {
                 const output = data.toString();
                 const cleanedOutput = cleanAnsiSequences(output);
                 console.log('SSH output:', cleanedOutput);
                 ws.send(cleanedOutput);
             });
 
-            stream.stderr.on('data', (data: Buffer) => {
+            stream.stderr.on('data', (data) => {
                 const error = data.toString();
                 const cleanedError = cleanAnsiSequences(error);
                 console.error('SSH stderr:', cleanedError);
@@ -121,7 +121,7 @@ function connectSSH(ws: any, hostname: string, password?: string) {
         });
     });
 
-    sshClient.on('error', (err: any) => {
+    sshClient.on('error', (err) => {
         console.error('SSH Client error:', err);
         ws.send(`Connection failed: ${err.message}\n`);
         disconnectSSH(ws);
@@ -133,7 +133,7 @@ function connectSSH(ws: any, hostname: string, password?: string) {
     });
 
     // Connect with credentials
-    const connectConfig: any = {
+    const connectConfig = {
         host: host,
         port: 22,
         username: username,
@@ -147,7 +147,7 @@ function connectSSH(ws: any, hostname: string, password?: string) {
     sshClient.connect(connectConfig);
 }
 
-function sendSSHInput(ws: any, command: string) {
+function sendSSHInput(ws, command) {
     const connection = sshConnections.get(ws);
     if (connection && connection.stream) {
         connection.stream.write(command + '\n');
@@ -156,7 +156,7 @@ function sendSSHInput(ws: any, command: string) {
     }
 }
 
-function disconnectSSH(ws: any) {
+function disconnectSSH(ws) {
     const connection = sshConnections.get(ws);
     if (connection) {
         if (connection.stream) {
