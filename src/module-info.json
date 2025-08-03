@@ -1,6 +1,6 @@
 {
     "name": "SSH-Client",
-    "id": "developer.ssh_client",
+    "id": "NSY.ssh_client",
     "version": "1.0.0",
     "author": "noursy",
     "author-id": "684fd894b2e21f06cdd3692b",
@@ -12,7 +12,7 @@
         "darwin"
     ],
     "build": {
-        "build-version": 2,
+        "build-version": 5,
         "excluded": [
             "electron.ts",
             "./renderer/react-wrapper"
