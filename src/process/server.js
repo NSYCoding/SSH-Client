@@ -13,7 +13,6 @@ app.get("/", (_, res) => {
     res.send('SSH WebSocket Server is running');
 });
 
-// Store SSH connections per WebSocket client
 const sshConnections = new Map();
 
 // Function to clean ANSI escape sequences
@@ -68,10 +67,8 @@ wss.on("connection", (ws) => {
 });
 
 function connectSSH(ws, hostname, password) {
-    // Clean up any existing connection for this WebSocket
     disconnectSSH(ws);
 
-    // Parse hostname (user@host or just host)
     let username = 'root';
     let host = hostname;
     
@@ -90,7 +87,6 @@ function connectSSH(ws, hostname, password) {
         console.log('SSH Client ready');
         ws.send(`Connected to ${username}@${host}\n`);
         
-        // Start a shell session
         sshClient.shell((err, stream) => {
             if (err) {
                 ws.send(`Shell error: ${err.message}\n`);
@@ -132,7 +128,6 @@ function connectSSH(ws, hostname, password) {
         disconnectSSH(ws);
     });
 
-    // Connect with credentials
     const connectConfig = {
         host: host,
         port: 22,

@@ -1,5 +1,5 @@
 import * as path from "path";
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 import {
     DataResponse,
     Process,
