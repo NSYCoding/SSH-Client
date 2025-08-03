@@ -3,6 +3,7 @@
     "id": "developer.ssh_client",
     "version": "1.0.0",
     "author": "noursy",
+    "author-id": "684fd894b2e21f06cdd3692b",
     "description": "A simple SSH client built for Nexus",
     "link": "https://github.com/NSYCoding/SSH-Client",
     "platforms": ["win32", "linux", "darwin"],
